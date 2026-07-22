@@ -33,6 +33,7 @@ Config Config::from_env() {
     const auto pk = env_or("GRPC_JWT_PUBLIC_KEY_FILE", "");
     if (!pk.empty()) c.jwt_public_key_file = pk;
     c.jwt_issuer = env_or("GRPC_JWT_ISSUER", c.jwt_issuer);
+    c.auth_enabled = env_or("GRPC_AUTH_ENABLED", "false") == "true";
 
     if (auto v = std::getenv("TTS_POOL_MAX")) c.pool_max_size = std::stoull(v);
     if (auto v = std::getenv("TTS_POOL_IDLE_MS")) {
@@ -59,11 +60,13 @@ Config Config::from_env() {
 }
 
 void Config::validate() const {
-    if (jwt_public_key_file.empty()) {
-        throw std::runtime_error("GRPC_JWT_PUBLIC_KEY_FILE is empty");
-    }
-    if (!std::filesystem::exists(jwt_public_key_file)) {
-        throw std::runtime_error("GRPC_JWT_PUBLIC_KEY_FILE does not exist");
+    if (auth_enabled) {
+        if (jwt_public_key_file.empty()) {
+            throw std::runtime_error("GRPC_JWT_PUBLIC_KEY_FILE is empty (required when GRPC_AUTH_ENABLED=true)");
+        }
+        if (!std::filesystem::exists(jwt_public_key_file)) {
+            throw std::runtime_error("GRPC_JWT_PUBLIC_KEY_FILE does not exist");
+        }
     }
     if (pool_max_size == 0) {
         throw std::runtime_error("TTS_POOL_MAX must be > 0");

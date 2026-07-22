@@ -62,15 +62,7 @@ int main(int argc, char** argv) {
     spdlog::info("starting tts_server bind={} local.enabled={} local.prefer={} local.model_dir={}",
                  cfg.grpc_bind, cfg.local.enabled, cfg.local.prefer_local,
                  cfg.local.model_dir);
-    if (const char* e = std::getenv("TTS_LOCAL_MODEL_DIR")) {
-        std::cerr << "DEBUG env TTS_LOCAL_MODEL_DIR len=" << std::strlen(e)
-                  << " first=" << (int)(unsigned char)e[0] << "\n";
-    } else {
-        std::cerr << "DEBUG env TTS_LOCAL_MODEL_DIR NOT SET\n";
-    }
-    std::cerr << "DEBUG cfg.model_dir=" << cfg.local.model_dir
-              << " len=" << cfg.local.model_dir.size() << "\n";
-
+    
     auto clock = std::make_shared<tts::framework::SystemClock>();
     auto bus = std::make_shared<tts::framework::EventBus>();
     bus->start_workers(cfg.bus_workers);
@@ -113,10 +105,15 @@ int main(int argc, char** argv) {
     tts::observability::EventLogger event_logger(bus);
     tts::observability::AdmissionGate admission_gate(board, bus);
 
-    auto jwt = tts::entry::JwtVerifier::from_rsa256_public_key_file(cfg.jwt_public_key_file);
-    if (!jwt) {
-        spdlog::critical("failed to load JWT public key from {}", cfg.jwt_public_key_file.string());
-        return 2;
+    std::unique_ptr<tts::entry::JwtVerifier> jwt;
+    if (cfg.auth_enabled) {
+        jwt = tts::entry::JwtVerifier::from_rsa256_public_key_file(cfg.jwt_public_key_file);
+        if (!jwt) {
+            spdlog::critical("failed to load JWT public key from {}", cfg.jwt_public_key_file.string());
+            return 2;
+        }
+    } else {
+        spdlog::warn("GRPC_AUTH_ENABLED=false: JWT verification disabled (intranet mode)");
     }
     auto parser = std::make_shared<tts::entry::RequestParser>();
     auto svc = std::make_shared<tts::entry::TtsServiceImpl>(

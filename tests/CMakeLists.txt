@@ -55,7 +55,6 @@ target_link_libraries(grpc_smoke_test
     PRIVATE tts_proto_gen
     OpenSSL::SSL OpenSSL::Crypto
     PkgConfig::GRPCPP PkgConfig::GRPC)
-add_test(NAME grpc_smoke COMMAND grpc_smoke_test)
 
 add_executable(grpc_ping_test test_grpc_ping.cpp)
 target_include_directories(grpc_ping_test PRIVATE

@@ -27,6 +27,7 @@ struct Config {
     std::string minimax_api_key;
     std::filesystem::path jwt_public_key_file;
     std::string jwt_issuer{"tts-service"};
+    bool auth_enabled{false};
     std::chrono::milliseconds heartbeat_interval{50};
     std::chrono::seconds pool_idle_timeout{60};
     std::chrono::seconds pool_max_lifetime{3600};
