@@ -4,7 +4,7 @@ tts_server 提供 3 个 gRPC 方法：`SynthesizeStream`、`SynthesizeClient`、
 
 监听地址：默认 `0.0.0.0:50061`（可通过 `GRPC_BIND` 配置）。
 
-鉴权：所有方法都要求 HTTP header `authorization: Bearer <JWT>`，JWT 使用 RS256 签发。
+鉴权：由 `GRPC_AUTH_ENABLED` 控制，**默认关闭**。开启（`GRPC_AUTH_ENABLED=true`）时，所有方法要求 HTTP header `authorization: Bearer <JWT>`，JWT 使用 RS256 签发；关闭时忽略该 header（内网模式）。
 
 ---
 
@@ -276,6 +276,8 @@ auto status = stub->GetMetrics(&ctx, req, &resp);
 
 ## 5. JWT 签发
 
+> 仅在 `GRPC_AUTH_ENABLED=true` 时需要。默认鉴权关闭，本节可跳过。
+
 ### 生成密钥对
 
 ```bash
@@ -293,6 +295,7 @@ python3 keys/mint_token.py keys/jwt_private.pem
 ### 服务端配置
 
 ```bash
+export GRPC_AUTH_ENABLED=true
 export GRPC_JWT_PUBLIC_KEY_FILE=$PWD/keys/jwt_public.pem
 export GRPC_JWT_ISSUER=tts-service
 ```
@@ -309,7 +312,7 @@ ctx.AddMetadata("authorization", "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
 
 | gRPC code | 场景 |
 |---|---|
-| `UNAUTHENTICATED` | JWT 缺失/签名错误/过期/iss 不匹配 |
+| `UNAUTHENTICATED` | JWT 缺失/签名错误/过期/iss 不匹配（仅 `GRPC_AUTH_ENABLED=true` 时） |
 | `INVALID_ARGUMENT` | 参数越界（sample_rate ≠ 8000/16000，channel ≠ 1，format 非 PCM/MP3） |
 | `UNAVAILABLE` | 本地引擎未就绪且 backend=LOCAL；或上游连接失败 |
 | `RESOURCE_EXHAUSTED` | 背压触发（AdmissionGate 拒绝新请求） |
@@ -334,14 +337,13 @@ ctx.AddMetadata("authorization", "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
 ### 案例 1：中文短句合成 + 保存 WAV
 
 ```bash
-# 启动服务
-export GRPC_JWT_PUBLIC_KEY_FILE=$PWD/keys/jwt_public.pem
+# 启动服务（默认鉴权关闭，无需 JWT 配置）
 export TTS_LOCAL_BACKEND=sherpa
 export TTS_LOCAL_MODEL_DIR=$PWD/models/vits-piper-zh_CN-huayan-medium
 export LD_LIBRARY_PATH=$PWD/deps/sherpa-onnx-v1.13.4/lib:$LD_LIBRARY_PATH
 build/tts_server &
 
-# 客户端
+# 客户端（鉴权关闭时 token 被忽略，参数仍需占位）
 build/tests/grpc_smoke_test localhost:50061 keys/jwt_private.pem "真正的中文tts" out.wav
 
 # 验证

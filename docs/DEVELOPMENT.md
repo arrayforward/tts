@@ -241,6 +241,8 @@ TtsRequestMsg(backend=Upstream)
 
 ## 8. JWT RS256 鉴权
 
+> 鉴权由 `GRPC_AUTH_ENABLED` 控制，**默认 `false`（关闭）**。关闭时服务端不加载公钥、不校验 token，适用于内网部署；设为 `true` 时必须配置 `GRPC_JWT_PUBLIC_KEY_FILE`，否则启动失败。
+
 ### 签发（测试）
 
 ```bash
@@ -285,7 +287,6 @@ bash scripts/smoke_test.sh
 ### 端到端测试（本地引擎）
 
 ```bash
-export GRPC_JWT_PUBLIC_KEY_FILE=$PWD/keys/jwt_public.pem
 export TTS_LOCAL_BACKEND=sherpa
 export TTS_LOCAL_MODEL_DIR=$PWD/models/vits-piper-zh_CN-huayan-medium
 export LD_LIBRARY_PATH=$PWD/deps/sherpa-onnx-v1.13.4/lib:$LD_LIBRARY_PATH
@@ -293,6 +294,8 @@ export LD_LIBRARY_PATH=$PWD/deps/sherpa-onnx-v1.13.4/lib:$LD_LIBRARY_PATH
 build/tts_server &
 build/tests/grpc_smoke_test localhost:50061 keys/jwt_private.pem "你好世界" out.wav
 ```
+
+默认鉴权关闭，无需 `GRPC_JWT_PUBLIC_KEY_FILE`；smoke 客户端发送的 JWT 会被忽略。若 `GRPC_AUTH_ENABLED=true`，需额外 `export GRPC_JWT_PUBLIC_KEY_FILE=$PWD/keys/jwt_public.pem`。
 
 ### 调试技巧
 
