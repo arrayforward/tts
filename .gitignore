@@ -1,0 +1,15 @@
+build/
+keys/
+*.pem
+.env
+src/pb2/
+logs/
+models/
+deps/
+.vs/
+.vscode/
+*.user
+*.wav
+tts_pb2.py
+tts_pb2_grpc.py
+CMakeUserPresets.json

@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+package tts;
+
+import "google/protobuf/empty.proto";
+
+service TTS {
+  rpc SynthesizeStream(SynthesizeRequest) returns (stream SynthesizeResponse);
+  rpc SynthesizeClient(stream TextChunk) returns (stream SynthesizeResponse);
+  rpc GetMetrics(google.protobuf.Empty) returns (MetricsSnapshot);
+}
+
+enum Model {
+  MODEL_UNSPECIFIED = 0;
+  SPEECH_2_8_HD = 1;
+  SPEECH_2_8_TURBO = 2;
+  SPEECH_2_6_HD = 3;
+  SPEECH_2_6_TURBO = 4;
+  SPEECH_02_HD = 5;
+  SPEECH_02_TURBO = 6;
+  SPEECH_01_HD = 7;
+  SPEECH_01_TURBO = 8;
+}
+
+enum AudioFormat {
+  AUDIO_FORMAT_UNSPECIFIED = 0;
+  MP3 = 1;
+  PCM = 2;
+  FLAC = 3;
+  WAV = 4;
+  PCMU_RAW = 5;
+  PCMU_WAV = 6;
+  OPUS = 7;
+}
+
+enum Emotion {
+  EMOTION_UNSPECIFIED = 0;
+  HAPPY = 1;
+  SAD = 2;
+  ANGRY = 3;
+  FEARFUL = 4;
+  DISGUSTED = 5;
+  SURPRISED = 6;
+  CALM = 7;
+  FLUENT = 8;
+  WHISPER = 9;
+}
+
+enum LanguageBoost {
+  LANGUAGE_BOOST_UNSPECIFIED = 0;
+  AUTO = 1;
+  CHINESE = 2;
+  ENGLISH = 3;
+  JAPANESE = 4;
+  KOREAN = 5;
+}
+
+enum Backend {
+  BACKEND_UNSPECIFIED = 0;
+  BACKEND_AUTO = 1;
+  BACKEND_LOCAL = 2;
+  BACKEND_UPSTREAM = 3;
+}
+
+message VoiceSetting {
+  string voice_id = 1;
+  float speed = 2;
+  float vol = 3;
+  int32 pitch = 4;
+  Emotion emotion = 5;
+  bool english_normalization = 6;
+}
+
+message AudioSetting {
+  int32 sample_rate = 1;
+  int32 bitrate = 2;
+  AudioFormat format = 3;
+  int32 channel = 4;
+}
+
+message PronunciationDict {
+  repeated string tone = 1;
+}
+
+message TimbreWeight {
+  string voice_id = 1;
+  int32 weight = 2;
+}
+
+message VoiceModify {
+  int32 pitch = 1;
+  int32 intensity = 2;
+  int32 timbre = 3;
+}
+
+message SynthesizeRequest {
+  string text = 1;
+  Model model = 2;
+  VoiceSetting voice = 3;
+  AudioSetting audio = 4;
+  PronunciationDict pronunciation = 5;
+  repeated TimbreWeight timbre_weights = 6;
+  LanguageBoost language_boost = 7;
+  VoiceModify voice_modify = 8;
+  Backend backend = 9;
+}
+
+message TextChunk {
+  oneof body {
+    string text = 1;
+    FinishMark finish = 2;
+  }
+}
+
+message FinishMark {
+  bool placeholder = 1;
+}
+
+message AudioMeta {
+  int32 sample_rate = 1;
+  int32 channels = 2;
+  AudioFormat format = 3;
+  int64 audio_length_ms = 4;
+  int64 audio_size_bytes = 5;
+  int64 usage_characters = 6;
+}
+
+message SynthesizeResponse {
+  bytes audio = 1;
+  AudioMeta meta = 2;
+  bool is_final = 3;
+  int64 cumulative_bytes = 4;
+  int32 status_code = 5;
+  string status_msg = 6;
+  string trace_id = 7;
+}
+
+message MetricsSnapshot {
+  uint64 inflight_requests = 1;
+  uint64 queued_messages = 2;
+  uint64 heartbeat_p99_us = 3;
+  uint64 upstream_connected = 4;
+  uint64 upstream_disconnected_total = 5;
+  uint64 audio_bytes_emitted_total = 6;
+  uint64 failed_requests_total = 7;
+  uint64 pool_idle_sessions = 8;
+  uint64 pool_active_sessions = 9;
+  uint64 backpressure_level = 10;
+  uint64 heartbeat_count = 11;
+  uint64 bus_worker_pending = 12;
+}
