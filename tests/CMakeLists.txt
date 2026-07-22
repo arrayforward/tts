@@ -63,3 +63,11 @@ target_include_directories(grpc_ping_test PRIVATE
 target_link_libraries(grpc_ping_test
     PRIVATE tts_proto_gen
     PkgConfig::GRPCPP PkgConfig::GRPC)
+
+add_executable(mediator_synth_test test_mediator_synth.cpp)
+target_include_directories(mediator_synth_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/pb2)
+target_link_libraries(mediator_synth_test
+    PRIVATE tts_proto_gen
+    PkgConfig::GRPCPP PkgConfig::GRPC)

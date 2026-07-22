@@ -19,6 +19,7 @@ protoc \
     --grpc_out="${GEN_DIR}" \
     --plugin=protoc-gen-grpc="$(command -v grpc_cpp_plugin)" \
     -I "${PROTO_DIR}" \
-    "${PROTO_DIR}/tts.proto"
+    "${PROTO_DIR}/tts.proto" \
+    "${PROTO_DIR}/mediator_tts.proto"
 
 echo "proto generated in ${GEN_DIR}"

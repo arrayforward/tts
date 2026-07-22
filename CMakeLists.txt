@@ -47,10 +47,14 @@ file(MAKE_DIRECTORY ${PROTO_GEN_DIR})
 set(PROTO_SRCS
     ${PROTO_GEN_DIR}/tts.pb.cc
     ${PROTO_GEN_DIR}/tts.grpc.pb.cc
+    ${PROTO_GEN_DIR}/mediator_tts.pb.cc
+    ${PROTO_GEN_DIR}/mediator_tts.grpc.pb.cc
 )
 set(PROTO_HDRS
     ${PROTO_GEN_DIR}/tts.pb.h
     ${PROTO_GEN_DIR}/tts.grpc.pb.h
+    ${PROTO_GEN_DIR}/mediator_tts.pb.h
+    ${PROTO_GEN_DIR}/mediator_tts.grpc.pb.h
 )
 
 find_program(PROTOC_BIN protoc)
@@ -96,8 +100,9 @@ add_custom_command(
         --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
         -I ${CMAKE_CURRENT_SOURCE_DIR}/proto
         ${PROTO_FILE}
-    DEPENDS ${PROTO_FILE}
-    COMMENT "Generating protobuf+gRPC stubs for tts.proto"
+        ${CMAKE_CURRENT_SOURCE_DIR}/proto/mediator_tts.proto
+    DEPENDS ${PROTO_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/proto/mediator_tts.proto
+    COMMENT "Generating protobuf+gRPC stubs for tts.proto and mediator_tts.proto"
     VERBATIM
 )
 

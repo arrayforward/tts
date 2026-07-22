@@ -14,6 +14,7 @@
 #include "config.h"
 #include "databoard/data_board.h"
 #include "entry/jwt_auth_interceptor.h"
+#include "entry/mediator_tts_service_impl.h"
 #include "entry/request_parser.h"
 #include "entry/tts_service_impl.h"
 #include "framework/clock.h"
@@ -118,6 +119,7 @@ int main(int argc, char** argv) {
     auto parser = std::make_shared<tts::entry::RequestParser>();
     auto svc = std::make_shared<tts::entry::TtsServiceImpl>(
         parser, request_channel, std::move(jwt), board);
+    auto mediator_svc = std::make_shared<tts::entry::MediatorTtsServiceImpl>(local_engine_shared);
 
     grpc::EnableDefaultHealthCheckService(true);
     grpc::reflection::InitProtoReflectionServerBuilderPlugin();
@@ -125,6 +127,7 @@ int main(int argc, char** argv) {
     ::grpc::ServerBuilder builder;
     builder.AddListeningPort(cfg.grpc_bind, ::grpc::InsecureServerCredentials());
     builder.RegisterService(svc.get());
+    builder.RegisterService(mediator_svc.get());
     std::unique_ptr<::grpc::Server> server(builder.BuildAndStart());
     if (!server) {
         spdlog::critical("failed to build gRPC server");
