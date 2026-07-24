@@ -24,8 +24,9 @@ public:
                          const ::mediator::TtsRequest* request,
                          ::mediator::TtsResponse* response) override {
         (void)context;
-        spdlog::info("mediator Synth session_id={} clip_id={} text_len={}",
-                     request->session_id(), request->clip_id(), request->text().size());
+        spdlog::info("mediator Synth session_id={} clip_id={} text_len={} text={}",
+                     request->session_id(), request->clip_id(), request->text().size(),
+                     request->text());
         if (!engine_ || !engine_->IsReady()) {
             return ::grpc::Status(::grpc::StatusCode::UNAVAILABLE, "local tts engine not ready");
         }
